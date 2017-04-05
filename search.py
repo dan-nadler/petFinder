@@ -1,11 +1,13 @@
-from datetime import datetime, timedelta
-import pytz
-from local_settings import *
-import petfinder
-from email.mime.text import MIMEText
-import smtplib
-from flask import Flask
 import logging
+import smtplib
+from datetime import datetime, timedelta
+from email.mime.text import MIMEText
+
+import petfinder
+import pytz
+from flask import Flask
+
+from local_settings import *
 
 
 def find_new_pets():
@@ -14,11 +16,13 @@ def find_new_pets():
     pets = []
     names = []
     for pet in api.shelter_getpets(id=shelter_id, status='A', output='full'):
-        if pet['lastUpdate'] > datetime.now().replace(tzinfo=pytz.timezone('America/New_York')) - timedelta(minutes=15):
-            if not pet['name'] in names:
-                names.append(pet['name'])
-
+        logging.debug(pet['name'])
+        if not pet['name'] in names:
+            names.append(pet['name'])
+            if pet['lastUpdate'] > datetime.utcnow().replace(tzinfo=pytz.timezone('UTC')) - timedelta(minutes=15):
+                pets.append(temp)
                 temp = {}
+
                 temp['name'] = pet['name']
                 temp['age'] = pet['age']
                 temp['breeds'] = pet['breeds']
@@ -28,10 +32,10 @@ def find_new_pets():
                 temp['photo'] = pet['photos'][0]['url']
                 temp['updated'] = pet['lastUpdate']
 
-                pets.append(temp)
+                logging.info('saved')
                 del temp
-            else:
-                break
+        else:
+            break
     return pets
 
 
@@ -75,6 +79,7 @@ def check_pets():
 
 
 app = Flask(__name__)
+
 
 @app.route('/')
 def home():
