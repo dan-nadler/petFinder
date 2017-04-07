@@ -16,11 +16,11 @@ def find_new_pets():
     pets = []
     names = []
     for pet in api.shelter_getpets(id=shelter_id, status='A', output='full'):
-        logging.debug(pet['name'])
+        logging.debug(
+            '{0}: {1} vs {2}'.format(pet['name'], pet['lastUpdate'].isoformat(), datetime.utcnow().isoformat()))
         if not pet['name'] in names:
             names.append(pet['name'])
             if pet['lastUpdate'] > datetime.utcnow().replace(tzinfo=pytz.timezone('UTC')) - timedelta(minutes=15):
-                pets.append(temp)
                 temp = {}
 
                 temp['name'] = pet['name']
@@ -31,6 +31,7 @@ def find_new_pets():
                 temp['id'] = pet['id']
                 temp['photo'] = pet['photos'][0]['url']
                 temp['updated'] = pet['lastUpdate']
+                pets.append(temp)
 
                 logging.info('saved')
                 del temp
@@ -75,7 +76,8 @@ def check_pets():
     logging.debug('Found %i pets' % len(pets))
     if len(pets) > 0:
         logging.debug('Sending email')
-        send_email('gdaniels313@gmail.com,dnadler87@gmail.com', pets)
+        send_email('gdaniels313@gmail.com', pets)
+        send_email('dnadler87@gmail.com', pets)
 
 
 app = Flask(__name__)
